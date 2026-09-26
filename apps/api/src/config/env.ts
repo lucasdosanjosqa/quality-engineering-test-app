@@ -5,6 +5,7 @@ const envSchema = z
     API_HOST: z.string().min(1).default('127.0.0.1'),
     API_PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
     DATABASE_FILE: z.string().min(1).default('./data/commerceops.sqlite'),
+    WEB_DIST_DIR: z.string().min(1).optional(),
     SESSION_COOKIE_SECURE: z
       .enum(['true', 'false'])
       .default('false')
@@ -14,7 +15,10 @@ const envSchema = z
       .enum(['true', 'false'])
       .default('false')
       .transform((value) => value === 'true'),
-    TEST_SUPPORT_TOKEN: z.string().min(16).optional(),
+    TEST_SUPPORT_TOKEN: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.string().min(16).optional(),
+    ),
   })
   .superRefine((environment, context) => {
     if (
@@ -31,6 +35,7 @@ const envSchema = z
 
 export type ApiConfig = {
   databaseFile: string;
+  webDistDir?: string;
   host: string;
   port: number;
   session: {
@@ -56,6 +61,7 @@ export function loadApiConfig(
 
   return {
     databaseFile: result.data.DATABASE_FILE,
+    webDistDir: result.data.WEB_DIST_DIR,
     host: result.data.API_HOST,
     port: result.data.API_PORT,
     session: {

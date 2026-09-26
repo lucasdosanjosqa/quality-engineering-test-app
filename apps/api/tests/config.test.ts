@@ -6,9 +6,22 @@ describe('API configuration', () => {
   it('uses safe local defaults with test support disabled', () => {
     expect(loadApiConfig({})).toEqual({
       databaseFile: './data/commerceops.sqlite',
+      webDistDir: undefined,
       host: '127.0.0.1',
       port: 3000,
       session: { cookieSecure: false, ttlMinutes: 60 },
+      testSupport: { enabled: false, token: undefined },
+    });
+  });
+
+  it('accepts production web assets and treats an empty support token as absent', () => {
+    expect(
+      loadApiConfig({
+        WEB_DIST_DIR: '/app/apps/web/dist',
+        TEST_SUPPORT_TOKEN: '',
+      }),
+    ).toMatchObject({
+      webDistDir: '/app/apps/web/dist',
       testSupport: { enabled: false, token: undefined },
     });
   });

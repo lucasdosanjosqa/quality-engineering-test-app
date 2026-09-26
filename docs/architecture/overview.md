@@ -47,3 +47,7 @@ Authenticated routes share a responsive application shell with role-aware naviga
 The same transactional reset service powers the local CLI and the optional HTTP endpoint. Test support is disabled by default. When enabled, startup requires a token of at least 16 characters and the endpoint compares its digest in constant time.
 
 The same opt-in boundary exposes in-memory fault controls for product list, detail, and write operations. Active faults make normal product routes return a deterministic 503 response. They introduce no delay or randomness, are never persisted, and are cleared by the database reset endpoint. Network-level mocking remains outside the SUT.
+
+## Production-like packaging
+
+The container image builds all workspaces and then runs only the API and contracts production dependencies. When `WEB_DIST_DIR` is configured, Fastify serves versioned web assets and returns the React entry point for non-API browser navigation. Unknown `/api` routes retain the public JSON error contract. Docker Compose publishes a single HTTP port and mounts SQLite storage as a named volume. Startup migrates the database and applies the deterministic baseline only when both users and products are absent.

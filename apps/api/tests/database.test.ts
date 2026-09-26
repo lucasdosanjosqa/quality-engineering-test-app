@@ -2,10 +2,34 @@ import { asc, count } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
 import { resetDatabase } from '../src/db/reset.js';
+import { initializeDatabase } from '../src/db/initialize.js';
 import { products, sessions, users } from '../src/db/schema.js';
 import { createTestDatabase } from './helpers/database.js';
 
 describe('database foundation', () => {
+  it('seeds a new database once without overwriting later changes', () => {
+    const database = createTestDatabase();
+
+    try {
+      initializeDatabase(database.db);
+      expect(
+        database.db.select({ value: count() }).from(users).get()?.value,
+      ).toBe(2);
+      expect(
+        database.db.select({ value: count() }).from(products).get()?.value,
+      ).toBe(12);
+
+      database.db.delete(products).run();
+      initializeDatabase(database.db);
+
+      expect(
+        database.db.select({ value: count() }).from(products).get()?.value,
+      ).toBe(0);
+    } finally {
+      database.close();
+    }
+  });
+
   it('applies migrations and resets to the deterministic baseline', () => {
     const database = createTestDatabase();
 

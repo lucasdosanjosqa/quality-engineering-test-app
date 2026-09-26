@@ -1,15 +1,16 @@
 import { buildApp } from './app.js';
 import { loadApiConfig } from './config/env.js';
 import { createDatabase } from './db/client.js';
-import { migrateDatabase } from './db/migrate.js';
+import { initializeDatabase } from './db/initialize.js';
 
 const config = loadApiConfig();
 const database = createDatabase(config.databaseFile);
-migrateDatabase(database.db);
+initializeDatabase(database.db);
 const app = buildApp({
   database,
   session: config.session,
   testSupport: config.testSupport,
+  webDistDir: config.webDistDir,
 });
 
 try {
