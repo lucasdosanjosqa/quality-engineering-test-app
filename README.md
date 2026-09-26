@@ -12,8 +12,10 @@ The application foundation currently provides:
 - persisted server-side sessions with absolute expiration;
 - Admin and Viewer authorization with an Admin-only summary endpoint;
 - protected React routes for login, dashboard, and administration;
+- an accessible authenticated shell with role-aware navigation, skip links, and page titles;
 - a protected product catalog with server-side search, filters, sorting, and pagination;
 - product details and Admin-only creation, editing, and deletion workflows;
+- responsive layouts, keyboard-operable confirmation dialogs, and an authenticated not-found page;
 - a Vite proxy from `/api` to the backend;
 - API integration and isolated component tests;
 - a migrated SQLite database with users, sessions, and products;

@@ -26,7 +26,7 @@ export function AdminPage() {
   }, []);
 
   return (
-    <main className={styles.pageLayout}>
+    <main id="main-content" className={styles.pageLayout}>
       <Link to="/dashboard">← Back to dashboard</Link>
       <h1>Admin summary</h1>
       {state.status === 'loading' && <p role="status">Loading summary…</p>}

@@ -45,7 +45,7 @@ export function LoginPage() {
   }
 
   return (
-    <main className={styles.centeredLayout}>
+    <main id="main-content" className={styles.centeredLayout}>
       <section className={styles.card} aria-labelledby="login-heading">
         <p className={styles.eyebrow}>CommerceOps</p>
         <h1 id="login-heading">Sign in</h1>

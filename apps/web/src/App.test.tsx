@@ -142,6 +142,14 @@ describe('authentication UI', () => {
     expect(
       screen.queryByRole('link', { name: 'Open admin summary' }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Products' })).toBeVisible();
+    expect(
+      screen.queryByRole('link', { name: 'Admin' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Skip to main content' }),
+    ).toHaveAttribute('href', '#main-content');
   });
 
   it('blocks a Viewer who navigates directly to the Admin route', async () => {
@@ -154,6 +162,23 @@ describe('authentication UI', () => {
 
     expect(
       await screen.findByRole('heading', { name: 'Access denied' }),
+    ).toBeVisible();
+  });
+
+  it('renders an authenticated not-found page instead of silently redirecting', async () => {
+    openAt('/missing-page');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ user: viewerUser }),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Page not found' }),
+    ).toBeVisible();
+    expect(document.title).toBe('Page not found | CommerceOps');
+    expect(
+      screen.getByRole('link', { name: 'Return to dashboard' }),
     ).toBeVisible();
   });
 
@@ -171,7 +196,9 @@ describe('authentication UI', () => {
       await screen.findByRole('heading', { name: 'Admin summary' }),
     ).toBeVisible();
     await waitFor(() => expect(screen.getByText('12')).toBeInTheDocument());
-    expect(screen.getByText('Products')).toBeInTheDocument();
+    expect(
+      screen.getByText('Products', { selector: 'dt' }),
+    ).toBeInTheDocument();
   });
 
   it('shows the API login error without losing the form', async () => {
@@ -428,6 +455,7 @@ describe('authentication UI', () => {
     expect(
       screen.getByRole('dialog', { name: 'Delete product?' }),
     ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 

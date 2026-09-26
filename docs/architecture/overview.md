@@ -10,7 +10,7 @@ Browser -> apps/web -> HTTP /api -> apps/api -> SQLite
 
 `apps/web` renders the browser interface and validates public API responses. `apps/api` owns HTTP behavior and validates data at its boundaries. `packages/contracts` contains only schemas and types that form the public agreement between them.
 
-The API exclusively owns SQLite access, migrations, deterministic data operations, authentication, and authorization. The browser never imports database code. Product HTTP endpoints remain deferred to their own milestone.
+The API exclusively owns SQLite access, migrations, deterministic data operations, authentication, and authorization. The browser never imports database code.
 
 ## Development request flow
 
@@ -37,6 +37,10 @@ The login endpoint verifies a scrypt password hash and returns an opaque session
 The authenticated catalog sends search, category, status, sorting, and pagination parameters to `GET /api/products`. The API validates them with the shared public contract and performs filtering, ordering, counting, and pagination in SQLite. Responses contain product summaries and explicit pagination metadata.
 
 Authenticated users can read product details. Creation, replacement, and deletion require the Admin role at the API boundary. The API generates product IDs and timestamps, rejects duplicate SKUs with `409 Conflict`, and validates the shared product input before persistence. The frontend mirrors permissions for navigation and feedback but does not act as the authorization boundary.
+
+## Browser navigation
+
+Authenticated routes share a responsive application shell with role-aware navigation and a single sign-out action. Each route exposes a semantic main landmark, a skip link, and a route-specific document title. Unknown authenticated paths render an in-application not-found page instead of silently redirecting. Destructive actions use a native dialog so keyboard focus and Escape dismissal follow browser semantics.
 
 ## Test data boundary
 
