@@ -6,7 +6,11 @@ import { migrateDatabase } from './db/migrate.js';
 const config = loadApiConfig();
 const database = createDatabase(config.databaseFile);
 migrateDatabase(database.db);
-const app = buildApp({ database, testSupport: config.testSupport });
+const app = buildApp({
+  database,
+  session: config.session,
+  testSupport: config.testSupport,
+});
 
 try {
   await app.listen({ host: config.host, port: config.port });

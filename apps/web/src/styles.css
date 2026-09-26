@@ -9,22 +9,6 @@ body {
   margin: 0;
 }
 
-main {
-  box-sizing: border-box;
-  max-width: 48rem;
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
-}
-
-section {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  border: 1px solid #d8deea;
-  border-radius: 0.5rem;
-  background: #ffffff;
-}
-
 button {
   padding: 0.625rem 1rem;
   border: 0;
@@ -33,6 +17,15 @@ button {
   background: #2856c7;
   font: inherit;
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+a {
+  color: #2856c7;
 }
 
 button:focus-visible {
