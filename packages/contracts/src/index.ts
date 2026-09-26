@@ -14,16 +14,22 @@ export { errorResponseSchema, type ErrorResponse } from './errors.js';
 export { healthResponseSchema, type HealthResponse } from './health.js';
 export {
   productCategorySchema,
+  productDetailSchema,
+  productInputSchema,
   productListQuerySchema,
   productListResponseSchema,
   productSortFieldSchema,
   productStatusSchema,
   productSummarySchema,
+  productResponseSchema,
   type ProductCategory,
+  type ProductDetail,
+  type ProductInput,
   type ProductListQuery,
   type ProductListResponse,
   type ProductSortField,
   type ProductStatus,
   type ProductSummary,
+  type ProductResponse,
 } from './products.js';
 export { resetResponseSchema, type ResetResponse } from './test-support.js';

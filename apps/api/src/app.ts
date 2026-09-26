@@ -12,6 +12,7 @@ export type BuildAppOptions = {
   database: DatabaseContext;
   session?: SessionConfig;
   now?: () => Date;
+  createId?: () => string;
   testSupport?: {
     enabled: boolean;
     token?: string;
@@ -30,6 +31,8 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   registerProductRoutes(app, {
     database: options.database.db,
     sessionService,
+    now: options.now,
+    createId: options.createId,
   });
   void app.register(healthRoutes, { prefix: '/api' });
 

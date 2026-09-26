@@ -6,11 +6,12 @@ import type {
   ProductStatus,
 } from '@commerceops/contracts';
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 import styles from '../App.module.css';
 import { getProducts } from '../api/client';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useAuth } from '../auth/useAuth';
 
 type CatalogResult =
   | { queryKey: string; status: 'success'; data: ProductListResponse }
@@ -38,6 +39,8 @@ function optionalStatus(value: string): ProductStatus | undefined {
 }
 
 export function ProductsPage() {
+  const { state: authState } = useAuth();
+  const location = useLocation();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<ProductCategory>();
   const [status, setStatus] = useState<ProductStatus>();
@@ -87,12 +90,24 @@ export function ProductsPage() {
       <nav aria-label="Breadcrumb">
         <Link to="/dashboard">Dashboard</Link> / <span>Products</span>
       </nav>
-      <header className={styles.pageHeading}>
+      <header className={`${styles.pageHeading} ${styles.header}`}>
         <div>
           <p className={styles.eyebrow}>Catalog</p>
           <h1>Products</h1>
         </div>
+        {authState.status === 'authenticated' &&
+          authState.user.role === 'admin' && (
+            <Link className={styles.buttonLink} to="/products/new">
+              Create product
+            </Link>
+          )}
       </header>
+
+      {(location.state as { notice?: string } | null)?.notice !== undefined && (
+        <p className={styles.notice} role="status">
+          {(location.state as { notice: string }).notice}
+        </p>
+      )}
 
       <section className={styles.filters} aria-label="Product filters">
         <div>
@@ -209,7 +224,9 @@ export function ProductsPage() {
                 {data.items.map((product) => (
                   <tr key={product.id}>
                     <td>{product.sku}</td>
-                    <th scope="row">{product.name}</th>
+                    <th scope="row">
+                      <Link to={`/products/${product.id}`}>{product.name}</Link>
+                    </th>
                     <td>{product.category}</td>
                     <td>{currency.format(product.priceCents / 100)}</td>
                     <td>{product.stockQuantity}</td>

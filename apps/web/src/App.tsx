@@ -6,6 +6,8 @@ import { AdminPage } from './pages/AdminPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
+import { ProductDetailsPage } from './pages/ProductDetailsPage';
+import { ProductFormPage } from './pages/ProductFormPage';
 
 export function App() {
   return (
@@ -16,9 +18,18 @@ export function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:id" element={<ProductDetailsPage />} />
           </Route>
           <Route element={<ProtectedRoute roles={['admin']} />}>
             <Route path="/admin" element={<AdminPage />} />
+            <Route
+              path="/products/new"
+              element={<ProductFormPage mode="create" />}
+            />
+            <Route
+              path="/products/:id/edit"
+              element={<ProductFormPage mode="edit" />}
+            />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
