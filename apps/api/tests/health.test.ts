@@ -2,6 +2,7 @@ import { healthResponseSchema } from '@commerceops/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildApp } from '../src/app.js';
+import { createTestDatabase } from './helpers/database.js';
 
 describe('GET /api/health', () => {
   const apps: ReturnType<typeof buildApp>[] = [];
@@ -11,7 +12,7 @@ describe('GET /api/health', () => {
   });
 
   it('returns a response matching the public health contract', async () => {
-    const app = buildApp();
+    const app = buildApp({ database: createTestDatabase() });
     apps.push(app);
 
     const response = await app.inject({ method: 'GET', url: '/api/health' });

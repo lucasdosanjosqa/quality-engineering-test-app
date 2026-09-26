@@ -2,17 +2,21 @@
 
 CommerceOps is a deterministic commerce operations application designed as a realistic system under test for quality engineering portfolios and external automation frameworks.
 
-## M1 scope
+## Current scope
 
-The current foundation provides one vertical slice:
+The application foundation currently provides:
 
 - a Fastify `GET /api/health` endpoint;
 - a public Zod response contract shared through `@commerceops/contracts`;
 - a React interface with loading, success, error, and retry states;
 - a Vite proxy from `/api` to the backend;
 - API integration and isolated component tests.
+- a migrated SQLite database with users, sessions, and products;
+- deterministic seed and reset operations;
+- an opt-in, token-protected `POST /api/test/reset` endpoint;
+- a consistent public API error contract.
 
-Database access, authentication, product management, test-support endpoints, and Playwright tests are intentionally outside this milestone.
+Authentication, product HTTP endpoints, and Playwright tests are not implemented yet.
 
 ## Requirements
 
@@ -37,6 +41,40 @@ The `.env` file is optional. Node loads it natively for the API with `--env-file
 
 Invalid hosts or ports fail before the corresponding development server starts.
 
+The default database is stored at `apps/api/data/commerceops.sqlite` and is created automatically when the API starts. Its migrations are versioned under `apps/api/drizzle`.
+
+## Deterministic data
+
+Apply migrations and restore the baseline data with:
+
+```bash
+npm run db:migrate
+npm run db:reset
+```
+
+The reset always creates 2 users, 12 products, and no sessions. These fictional credentials are reserved for the authentication milestone:
+
+| Role   | Email                    | Password     |
+| ------ | ------------------------ | ------------ |
+| Admin  | `admin@commerceops.dev`  | `Admin123!`  |
+| Viewer | `viewer@commerceops.dev` | `Viewer123!` |
+
+To expose the reset operation over HTTP, add both values below to the root `.env` file:
+
+```dotenv
+TEST_SUPPORT_ENABLED=true
+TEST_SUPPORT_TOKEN=local-test-support-token
+```
+
+Then call it with the configured token:
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/test/reset \
+  -H "x-test-support-token: local-test-support-token"
+```
+
+The route does not exist while test support is disabled. Never enable it in a publicly reachable environment.
+
 ## Commands
 
 ```bash
@@ -46,6 +84,8 @@ npm run lint
 npm run typecheck
 npm run test
 npm run build
+npm run db:migrate
+npm run db:reset
 ```
 
 The contracts workspace is built before its consumers. TypeScript project references enforce the same dependency order during type checking.

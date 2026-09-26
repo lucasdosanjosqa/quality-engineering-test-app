@@ -1,8 +1,12 @@
 import { buildApp } from './app.js';
 import { loadApiConfig } from './config/env.js';
+import { createDatabase } from './db/client.js';
+import { migrateDatabase } from './db/migrate.js';
 
 const config = loadApiConfig();
-const app = buildApp();
+const database = createDatabase(config.databaseFile);
+migrateDatabase(database.db);
+const app = buildApp({ database, testSupport: config.testSupport });
 
 try {
   await app.listen({ host: config.host, port: config.port });

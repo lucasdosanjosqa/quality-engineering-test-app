@@ -56,7 +56,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/api/tests/**/*.ts', 'apps/api/vitest.config.ts'],
+    files: [
+      'apps/api/tests/**/*.ts',
+      'apps/api/drizzle.config.ts',
+      'apps/api/vitest.config.ts',
+    ],
     languageOptions: {
       parserOptions: {
         project: './apps/api/tsconfig.test.json',

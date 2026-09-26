@@ -7,6 +7,9 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:migrate": "node --env-file-if-exists=../../.env --import tsx src/db/run-migrations.ts",
+    "db:reset": "node --env-file-if-exists=../../.env --import tsx src/db/run-reset.ts",
     "dev": "node --env-file-if-exists=../../.env --watch --import tsx src/server.ts",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
     "test": "vitest run",
@@ -14,11 +17,13 @@
   },
   "dependencies": {
     "@commerceops/contracts": "0.1.0",
+    "drizzle-orm": "1.0.0-rc.4",
     "fastify": "5.12.5",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/node": "24.19.0",
+    "drizzle-kit": "1.0.0-rc.4",
     "tsx": "4.23.15",
     "vitest": "5.0.2"
   }
