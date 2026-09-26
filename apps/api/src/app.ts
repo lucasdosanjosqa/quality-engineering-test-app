@@ -4,6 +4,7 @@ import type { DatabaseContext } from './db/client.js';
 import { registerAuth } from './auth/routes.js';
 import type { SessionConfig } from './auth/session-service.js';
 import { registerErrorHandlers } from './errors/handlers.js';
+import { registerProductRoutes } from './products/routes.js';
 import { healthRoutes } from './routes/health.js';
 import { testSupportRoutes } from './test-support/routes.js';
 
@@ -21,10 +22,14 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   const app = Fastify({ logger: false });
 
   registerErrorHandlers(app);
-  registerAuth(app, {
+  const sessionService = registerAuth(app, {
     database: options.database.db,
     session: options.session ?? { cookieSecure: false, ttlMinutes: 60 },
     now: options.now,
+  });
+  registerProductRoutes(app, {
+    database: options.database.db,
+    sessionService,
   });
   void app.register(healthRoutes, { prefix: '/api' });
 

@@ -20,7 +20,7 @@ export type AuthOptions = {
   now?: () => Date;
 };
 
-function requireUser(
+export function requireUser(
   request: FastifyRequest,
   sessionService: SessionService,
   roles?: UserRole[],
@@ -61,7 +61,10 @@ function setSessionCookie(
   });
 }
 
-export function registerAuth(app: FastifyInstance, options: AuthOptions): void {
+export function registerAuth(
+  app: FastifyInstance,
+  options: AuthOptions,
+): SessionService {
   const sessionService = new SessionService(
     options.database,
     options.session,
@@ -121,4 +124,6 @@ export function registerAuth(app: FastifyInstance, options: AuthOptions): void {
       .code(200)
       .send(adminSummaryResponseSchema.parse(sessionService.getAdminSummary()));
   });
+
+  return sessionService;
 }
