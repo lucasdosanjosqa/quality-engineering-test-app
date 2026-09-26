@@ -7,6 +7,7 @@ import { registerErrorHandlers } from './errors/handlers.js';
 import { registerProductRoutes } from './products/routes.js';
 import { healthRoutes } from './routes/health.js';
 import { testSupportRoutes } from './test-support/routes.js';
+import { FaultController } from './test-support/fault-controller.js';
 
 export type BuildAppOptions = {
   database: DatabaseContext;
@@ -21,6 +22,7 @@ export type BuildAppOptions = {
 
 export function buildApp(options: BuildAppOptions): FastifyInstance {
   const app = Fastify({ logger: false });
+  const faults = new FaultController();
 
   registerErrorHandlers(app);
   const sessionService = registerAuth(app, {
@@ -33,6 +35,7 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
     sessionService,
     now: options.now,
     createId: options.createId,
+    faults,
   });
   void app.register(healthRoutes, { prefix: '/api' });
 
@@ -47,6 +50,7 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
       prefix: '/api/test',
       database: options.database.db,
       token: options.testSupport.token,
+      faults,
     });
   }
 

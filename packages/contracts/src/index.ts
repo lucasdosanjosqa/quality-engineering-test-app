@@ -32,4 +32,13 @@ export {
   type ProductSummary,
   type ProductResponse,
 } from './products.js';
-export { resetResponseSchema, type ResetResponse } from './test-support.js';
+export {
+  resetResponseSchema,
+  testFaultRequestSchema,
+  testFaultStateSchema,
+  testFaultTargetSchema,
+  type ResetResponse,
+  type TestFaultRequest,
+  type TestFaultState,
+  type TestFaultTarget,
+} from './test-support.js';
