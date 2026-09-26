@@ -1,5 +1,7 @@
 # CommerceOps
 
+[![CI](https://github.com/lucasdosanjosqa/quality-engineering-test-app/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasdosanjosqa/quality-engineering-test-app/actions/workflows/ci.yml)
+
 CommerceOps is a deterministic commerce operations application designed as a realistic system under test for quality engineering portfolios and external automation frameworks.
 
 ## Current scope
@@ -125,6 +127,10 @@ npm run db:reset
 ```
 
 The contracts workspace is built before its consumers. TypeScript project references enforce the same dependency order during type checking.
+
+## Continuous integration
+
+GitHub Actions runs dependency installation, formatting, linting, type checking, tests, the production build, and dependency auditing for pull requests targeting `main` and pushes to `main`. The workflow reads the Node.js version from `.nvmrc`, uses the npm lockfile, and can also be started manually.
 
 ## Repository boundaries
 
