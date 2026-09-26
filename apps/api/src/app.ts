@@ -8,12 +8,14 @@ import { registerProductRoutes } from './products/routes.js';
 import { healthRoutes } from './routes/health.js';
 import { testSupportRoutes } from './test-support/routes.js';
 import { FaultController } from './test-support/fault-controller.js';
+import { registerStaticAssets } from './web/static-assets.js';
 
 export type BuildAppOptions = {
   database: DatabaseContext;
   session?: SessionConfig;
   now?: () => Date;
   createId?: () => string;
+  webDistDir?: string;
   testSupport?: {
     enabled: boolean;
     token?: string;
@@ -24,7 +26,10 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   const app = Fastify({ logger: false });
   const faults = new FaultController();
 
-  registerErrorHandlers(app);
+  if (options.webDistDir !== undefined) {
+    registerStaticAssets(app, options.webDistDir);
+  }
+  registerErrorHandlers(app, { serveSpa: options.webDistDir !== undefined });
   const sessionService = registerAuth(app, {
     database: options.database.db,
     session: options.session ?? { cookieSecure: false, ttlMinutes: 60 },

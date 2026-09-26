@@ -1,0 +1,17 @@
+services:
+  commerceops:
+    build:
+      context: .
+    init: true
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    environment:
+      SESSION_COOKIE_SECURE: '${SESSION_COOKIE_SECURE:-false}'
+      SESSION_TTL_MINUTES: '${SESSION_TTL_MINUTES:-60}'
+      TEST_SUPPORT_ENABLED: '${TEST_SUPPORT_ENABLED:-false}'
+      TEST_SUPPORT_TOKEN: '${TEST_SUPPORT_TOKEN:-}'
+    volumes:
+      - commerceops-data:/app/data
+
+volumes:
+  commerceops-data:

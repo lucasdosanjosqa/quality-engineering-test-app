@@ -14,8 +14,21 @@ function isFastifyValidationError(
   );
 }
 
-export function registerErrorHandlers(app: FastifyInstance): void {
+export function registerErrorHandlers(
+  app: FastifyInstance,
+  options: { serveSpa: boolean } = { serveSpa: false },
+): void {
   app.setNotFoundHandler((request, reply) => {
+    const [pathname] = request.url.split('?', 1);
+    const isBrowserNavigation =
+      (request.method === 'GET' || request.method === 'HEAD') &&
+      pathname !== '/api' &&
+      !pathname?.startsWith('/api/');
+
+    if (options.serveSpa && isBrowserNavigation) {
+      return reply.type('text/html').sendFile('index.html');
+    }
+
     const response = errorResponseSchema.parse({
       error: {
         code: 'NOT_FOUND',

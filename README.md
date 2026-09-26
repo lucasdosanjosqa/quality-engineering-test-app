@@ -28,10 +28,13 @@ The application foundation currently provides:
 
 File upload, password recovery, and Playwright tests are not implemented yet.
 
+The application can run either as separate development servers or as one production-like container that serves the frontend and API from the same origin.
+
 ## Requirements
 
 - Node.js 24.19.0
 - npm 11.x
+- Docker Engine 24+ with Docker Compose v2 for the optional container workflow
 
 ## Local setup
 
@@ -52,7 +55,23 @@ The `.env` file is optional. Node loads it natively for the API with `--env-file
 
 Invalid hosts, ports, session durations, or cookie security values fail before the corresponding development server starts. Sessions last 60 minutes by default. Set `SESSION_COOKIE_SECURE=true` whenever the API is served over HTTPS; the local HTTP default is `false`.
 
-The default database is stored at `apps/api/data/commerceops.sqlite` and is created automatically when the API starts. Its migrations are versioned under `apps/api/drizzle`.
+The default database is stored at `apps/api/data/commerceops.sqlite`. It is created and migrated automatically when the API starts, and a completely empty database receives the deterministic baseline once. Its migrations are versioned under `apps/api/drizzle`.
+
+## Containerized runtime
+
+Build and start the complete SUT with:
+
+```bash
+docker compose up --build
+```
+
+Open `http://127.0.0.1:3000`. The named `commerceops-data` volume preserves SQLite data when the container is recreated. Reset the deterministic baseline before a test run with:
+
+```bash
+docker compose exec commerceops npm run db:reset:production --workspace=@commerceops/api
+```
+
+Set `APP_PORT` to change the host port. Test support remains disabled by default; set both `TEST_SUPPORT_ENABLED=true` and a `TEST_SUPPORT_TOKEN` of at least 16 characters only in a controlled environment. Stop the application with `docker compose down`. Adding `--volumes` also removes the persisted database and is intentionally destructive.
 
 ## Deterministic data
 
