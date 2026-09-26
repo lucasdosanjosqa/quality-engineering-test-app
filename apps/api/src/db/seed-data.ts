@@ -1,15 +1,10 @@
-import { scryptSync } from 'node:crypto';
-
 import type { products, users } from './schema.js';
+import { createPasswordHash } from '../auth/password.js';
 
 type NewUser = typeof users.$inferInsert;
 type NewProduct = typeof products.$inferInsert;
 
 const createdAt = new Date('2026-01-15T12:00:00.000Z');
-
-function createPasswordHash(password: string, salt: string): string {
-  return `scrypt$${salt}$${scryptSync(password, salt, 64).toString('hex')}`;
-}
 
 export const seedUsers: NewUser[] = [
   {

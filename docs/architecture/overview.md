@@ -10,7 +10,7 @@ Browser -> apps/web -> HTTP /api -> apps/api -> SQLite
 
 `apps/web` renders the browser interface and validates public API responses. `apps/api` owns HTTP behavior and validates data at its boundaries. `packages/contracts` contains only schemas and types that form the public agreement between them.
 
-The API exclusively owns SQLite access, migrations, and deterministic data operations. The browser never imports database code. Authentication and product HTTP endpoints remain deferred to their own milestones.
+The API exclusively owns SQLite access, migrations, deterministic data operations, authentication, and authorization. The browser never imports database code. Product HTTP endpoints remain deferred to their own milestone.
 
 ## Development request flow
 
@@ -27,6 +27,10 @@ The root TypeScript project references contracts before API and web. Workspace s
 The server validates configuration, opens SQLite, applies pending migrations, and only then starts listening. Fastify closes the database as part of application shutdown. Tests use migrated in-memory databases and never share the development database.
 
 The schema defines users, sessions, and products with foreign keys, uniqueness constraints, domain checks, and query-oriented indexes. Drizzle's TypeScript schema is the source of truth, while generated SQL migrations and snapshots are committed for reproducibility.
+
+## Authentication flow
+
+The login endpoint verifies a scrypt password hash and returns an opaque session token only through an HttpOnly cookie. SQLite stores the token's SHA-256 digest, not the token itself. Authenticated requests resolve the session and user server-side, enforce absolute expiration, and apply role checks at the API boundary. The web application restores the current user through `/api/auth/me` and uses protected routes for user experience, while the API remains the authorization authority.
 
 ## Test data boundary
 

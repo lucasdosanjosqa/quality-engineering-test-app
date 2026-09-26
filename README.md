@@ -8,15 +8,18 @@ The application foundation currently provides:
 
 - a Fastify `GET /api/health` endpoint;
 - a public Zod response contract shared through `@commerceops/contracts`;
-- a React interface with loading, success, error, and retry states;
+- cookie-based login, logout, and current-user endpoints;
+- persisted server-side sessions with absolute expiration;
+- Admin and Viewer authorization with an Admin-only summary endpoint;
+- protected React routes for login, dashboard, and administration;
 - a Vite proxy from `/api` to the backend;
-- API integration and isolated component tests.
+- API integration and isolated component tests;
 - a migrated SQLite database with users, sessions, and products;
 - deterministic seed and reset operations;
 - an opt-in, token-protected `POST /api/test/reset` endpoint;
 - a consistent public API error contract.
 
-Authentication, product HTTP endpoints, and Playwright tests are not implemented yet.
+Product HTTP endpoints and Playwright tests are not implemented yet.
 
 ## Requirements
 
@@ -38,8 +41,9 @@ The `.env` file is optional. Node loads it natively for the API with `--env-file
 - web: `http://127.0.0.1:5173`
 - API: `http://127.0.0.1:3000`
 - health endpoint through the web proxy: `http://127.0.0.1:5173/api/health`
+- login page: `http://127.0.0.1:5173/login`
 
-Invalid hosts or ports fail before the corresponding development server starts.
+Invalid hosts, ports, session durations, or cookie security values fail before the corresponding development server starts. Sessions last 60 minutes by default. Set `SESSION_COOKIE_SECURE=true` whenever the API is served over HTTPS; the local HTTP default is `false`.
 
 The default database is stored at `apps/api/data/commerceops.sqlite` and is created automatically when the API starts. Its migrations are versioned under `apps/api/drizzle`.
 
@@ -52,7 +56,7 @@ npm run db:migrate
 npm run db:reset
 ```
 
-The reset always creates 2 users, 12 products, and no sessions. These fictional credentials are reserved for the authentication milestone:
+The reset always creates 2 users, 12 products, and no sessions. Use these fictional credentials locally:
 
 | Role   | Email                    | Password     |
 | ------ | ------------------------ | ------------ |
@@ -74,6 +78,15 @@ curl -X POST http://127.0.0.1:3000/api/test/reset \
 ```
 
 The route does not exist while test support is disabled. Never enable it in a publicly reachable environment.
+
+## Authentication endpoints
+
+- `POST /api/auth/login` creates a server-side session and sets an HttpOnly cookie.
+- `POST /api/auth/logout` revokes the current session and clears the cookie.
+- `GET /api/auth/me` returns the authenticated user.
+- `GET /api/admin/summary` requires the Admin role.
+
+The browser never stores credentials or session tokens in web storage. Invalid login attempts return the same public error whether the email is unknown or the password is incorrect.
 
 ## Commands
 

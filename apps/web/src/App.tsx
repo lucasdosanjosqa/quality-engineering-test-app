@@ -1,69 +1,26 @@
-import { useCallback, useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
-import { getHealth } from './api/health';
-
-type HealthState =
-  | { status: 'loading' }
-  | { status: 'success'; service: string }
-  | { status: 'error' };
+import { AuthProvider } from './auth/AuthProvider';
+import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AdminPage } from './pages/AdminPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { LoginPage } from './pages/LoginPage';
 
 export function App() {
-  const [health, setHealth] = useState<HealthState>({ status: 'loading' });
-  const [attempt, setAttempt] = useState(0);
-
-  const retry = useCallback(() => {
-    setHealth({ status: 'loading' });
-    setAttempt((current) => current + 1);
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function checkHealth() {
-      try {
-        const response = await getHealth(controller.signal);
-        setHealth({ status: 'success', service: response.service });
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          setHealth({ status: 'error' });
-        }
-      }
-    }
-
-    void checkHealth();
-
-    return () => {
-      controller.abort();
-    };
-  }, [attempt]);
-
   return (
-    <main>
-      <h1>CommerceOps</h1>
-      <p>Commerce operations built for reliable quality engineering.</p>
-
-      <section aria-labelledby="system-status-heading">
-        <h2 id="system-status-heading">System status</h2>
-
-        {health.status === 'loading' && (
-          <p role="status">Checking API availability…</p>
-        )}
-
-        {health.status === 'success' && (
-          <p role="status">
-            API available: <strong>{health.service}</strong>
-          </p>
-        )}
-
-        {health.status === 'error' && (
-          <div role="alert">
-            <p>The API is unavailable. Check the service and try again.</p>
-            <button type="button" onClick={retry}>
-              Try again
-            </button>
-          </div>
-        )}
-      </section>
-    </main>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+          </Route>
+          <Route element={<ProtectedRoute roles={['admin']} />}>
+            <Route path="/admin" element={<AdminPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

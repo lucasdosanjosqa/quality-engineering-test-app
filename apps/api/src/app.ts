@@ -1,12 +1,16 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import type { DatabaseContext } from './db/client.js';
+import { registerAuth } from './auth/routes.js';
+import type { SessionConfig } from './auth/session-service.js';
 import { registerErrorHandlers } from './errors/handlers.js';
 import { healthRoutes } from './routes/health.js';
 import { testSupportRoutes } from './test-support/routes.js';
 
 export type BuildAppOptions = {
   database: DatabaseContext;
+  session?: SessionConfig;
+  now?: () => Date;
   testSupport?: {
     enabled: boolean;
     token?: string;
@@ -17,6 +21,11 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   const app = Fastify({ logger: false });
 
   registerErrorHandlers(app);
+  registerAuth(app, {
+    database: options.database.db,
+    session: options.session ?? { cookieSecure: false, ttlMinutes: 60 },
+    now: options.now,
+  });
   void app.register(healthRoutes, { prefix: '/api' });
 
   if (options.testSupport?.enabled === true) {

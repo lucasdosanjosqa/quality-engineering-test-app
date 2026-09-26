@@ -1,0 +1,76 @@
+.centeredLayout,
+.pageLayout {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+}
+
+.centeredLayout {
+  display: grid;
+  place-items: center;
+}
+
+.pageLayout {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.card {
+  width: min(100%, 28rem);
+  padding: 2rem;
+  border: 1px solid #d8deea;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2.5rem rgb(23 32 51 / 8%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #2856c7;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.card input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #aab4c7;
+  border-radius: 0.375rem;
+  font: inherit;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+}
+
+.summaryGrid div {
+  padding: 1.25rem;
+  border: 1px solid #d8deea;
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+.summaryGrid dd {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+}

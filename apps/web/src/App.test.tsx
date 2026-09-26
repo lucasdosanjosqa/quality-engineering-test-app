@@ -1,77 +1,181 @@
-import { act, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { App } from './App';
 
-function jsonResponse(body: unknown, init?: ResponseInit): Response {
+const adminUser = {
+  id: '10000000-0000-4000-8000-000000000001',
+  email: 'admin@commerceops.dev',
+  fullName: 'Alex Morgan',
+  role: 'admin',
+} as const;
+
+const viewerUser = {
+  id: '10000000-0000-4000-8000-000000000002',
+  email: 'viewer@commerceops.dev',
+  fullName: 'Taylor Reed',
+  role: 'viewer',
+} as const;
+
+function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
-    status: 200,
+    status,
     headers: { 'Content-Type': 'application/json' },
-    ...init,
   });
 }
 
-describe('App', () => {
+function apiError(status: number, code: string, message: string): Response {
+  return jsonResponse(
+    { error: { code, message, requestId: 'test-request' } },
+    status,
+  );
+}
+
+function openAt(path: string): void {
+  window.history.pushState({}, '', path);
+}
+
+describe('authentication UI', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    window.history.pushState({}, '', '/');
   });
 
-  it('shows loading and then the validated API status', async () => {
-    let resolveResponse: ((response: Response) => void) | undefined;
-    const pendingResponse = new Promise<Response>((resolve) => {
-      resolveResponse = resolve;
-    });
-    vi.spyOn(globalThis, 'fetch').mockReturnValue(pendingResponse);
+  it('redirects an unauthenticated visitor to the login page', async () => {
+    openAt('/dashboard');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      apiError(401, 'AUTHENTICATION_REQUIRED', 'Authentication is required.'),
+    );
 
     render(<App />);
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Checking API availability',
+      'Restoring your session',
     );
-
-    await act(async () => {
-      resolveResponse?.(
-        jsonResponse({ status: 'ok', service: 'commerceops-api' }),
-      );
-      await pendingResponse;
-    });
-
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'API available: commerceops-api',
-    );
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in' }),
+    ).toBeVisible();
   });
 
-  it('shows an accessible error when the request fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
-      new TypeError('Network failure'),
-    );
-
-    render(<App />);
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'The API is unavailable',
-    );
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeEnabled();
-  });
-
-  it('retries the health check after an error', async () => {
+  it('signs in and displays the Admin dashboard', async () => {
+    openAt('/login');
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
-      .mockRejectedValueOnce(new TypeError('Network failure'))
       .mockResolvedValueOnce(
-        jsonResponse({ status: 'ok', service: 'commerceops-api' }),
+        apiError(401, 'AUTHENTICATION_REQUIRED', 'Authentication is required.'),
+      )
+      .mockResolvedValueOnce(jsonResponse({ user: adminUser }));
+
+    render(<App />);
+
+    fireEvent.change(await screen.findByLabelText('Email'), {
+      target: { value: 'admin@commerceops.dev' },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'Admin123!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome, Alex Morgan' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: 'Open admin summary' }),
+    ).toBeVisible();
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/auth/login',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('restores a Viewer session without exposing Admin navigation', async () => {
+    openAt('/dashboard');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ user: viewerUser }),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome, Taylor Reed' }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('link', { name: 'Open admin summary' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('blocks a Viewer who navigates directly to the Admin route', async () => {
+    openAt('/admin');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ user: viewerUser }),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Access denied' }),
+    ).toBeVisible();
+  });
+
+  it('loads the protected Admin summary', async () => {
+    openAt('/admin');
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({ user: adminUser }))
+      .mockResolvedValueOnce(
+        jsonResponse({ users: 2, products: 12, activeSessions: 1 }),
       );
 
     render(<App />);
 
-    const retryButton = await screen.findByRole('button', {
-      name: 'Try again',
-    });
-    retryButton.click();
+    expect(
+      await screen.findByRole('heading', { name: 'Admin summary' }),
+    ).toBeVisible();
+    await waitFor(() => expect(screen.getByText('12')).toBeInTheDocument());
+    expect(screen.getByText('Products')).toBeInTheDocument();
+  });
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'API available: commerceops-api',
+  it('shows the API login error without losing the form', async () => {
+    openAt('/login');
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        apiError(401, 'AUTHENTICATION_REQUIRED', 'Authentication is required.'),
+      )
+      .mockResolvedValueOnce(
+        apiError(
+          401,
+          'INVALID_CREDENTIALS',
+          'The email or password is invalid.',
+        ),
+      );
+
+    render(<App />);
+
+    fireEvent.change(await screen.findByLabelText('Email'), {
+      target: { value: 'admin@commerceops.dev' },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'wrong-password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The email or password is invalid.',
     );
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(screen.getByLabelText('Email')).toBeVisible();
+  });
+
+  it('signs out and returns to login', async () => {
+    openAt('/dashboard');
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({ user: adminUser }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in' }),
+    ).toBeVisible();
   });
 });
