@@ -3,11 +3,14 @@ import {
   authResponseSchema,
   errorResponseSchema,
   productListResponseSchema,
+  productResponseSchema,
   type AdminSummaryResponse,
   type AuthenticatedUser,
   type LoginRequest,
   type ProductListQuery,
   type ProductListResponse,
+  type ProductDetail,
+  type ProductInput,
 } from '@commerceops/contracts';
 
 export class ApiError extends Error {
@@ -97,4 +100,37 @@ export async function getProducts(
     signal,
   });
   return productListResponseSchema.parse(await response.json());
+}
+
+export async function getProduct(
+  id: string,
+  signal?: AbortSignal,
+): Promise<ProductDetail> {
+  const response = await request(`/api/products/${id}`, { signal });
+  return productResponseSchema.parse(await response.json()).product;
+}
+
+export async function createProduct(
+  input: ProductInput,
+): Promise<ProductDetail> {
+  const response = await request('/api/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return productResponseSchema.parse(await response.json()).product;
+}
+
+export async function updateProduct(
+  id: string,
+  input: ProductInput,
+): Promise<ProductDetail> {
+  const response = await request(`/api/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+  return productResponseSchema.parse(await response.json()).product;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await request(`/api/products/${id}`, { method: 'DELETE' });
 }

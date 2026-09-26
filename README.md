@@ -13,6 +13,7 @@ The application foundation currently provides:
 - Admin and Viewer authorization with an Admin-only summary endpoint;
 - protected React routes for login, dashboard, and administration;
 - a protected product catalog with server-side search, filters, sorting, and pagination;
+- product details and Admin-only creation, editing, and deletion workflows;
 - a Vite proxy from `/api` to the backend;
 - API integration and isolated component tests;
 - a migrated SQLite database with users, sessions, and products;
@@ -20,7 +21,7 @@ The application foundation currently provides:
 - an opt-in, token-protected `POST /api/test/reset` endpoint;
 - a consistent public API error contract.
 
-Product creation, editing, deletion, and Playwright tests are not implemented yet.
+File upload, password recovery, artificial failure controls, and Playwright tests are not implemented yet.
 
 ## Requirements
 
@@ -87,6 +88,8 @@ The route does not exist while test support is disabled. Never enable it in a pu
 - `GET /api/auth/me` returns the authenticated user.
 - `GET /api/admin/summary` requires the Admin role.
 - `GET /api/products` lists products for authenticated users and accepts `search`, `category`, `status`, `sortBy`, `sortOrder`, `page`, and `pageSize` query parameters.
+- `GET /api/products/:id` returns product details to authenticated users.
+- `POST /api/products`, `PUT /api/products/:id`, and `DELETE /api/products/:id` require the Admin role.
 
 The browser never stores credentials or session tokens in web storage. Invalid login attempts return the same public error whether the email is unknown or the password is incorrect.
 

@@ -1,9 +1,13 @@
+import { randomUUID } from 'node:crypto';
+
 import type {
+  ProductDetail,
+  ProductInput,
   ProductListQuery,
   ProductListResponse,
   ProductSummary,
 } from '@commerceops/contracts';
-import { and, asc, count, desc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ne, sql, type SQL } from 'drizzle-orm';
 
 import type { AppDatabase } from '../db/client.js';
 import { products } from '../db/schema.js';
@@ -29,8 +33,20 @@ function toProductSummary(product: {
   return { ...product, updatedAt: product.updatedAt.toISOString() };
 }
 
+function toProductDetail(product: typeof products.$inferSelect): ProductDetail {
+  return {
+    ...toProductSummary(product),
+    description: product.description,
+    createdAt: product.createdAt.toISOString(),
+  };
+}
+
 export class ProductService {
-  constructor(private readonly database: AppDatabase) {}
+  constructor(
+    private readonly database: AppDatabase,
+    private readonly now: () => Date = () => new Date(),
+    private readonly createId: () => string = randomUUID,
+  ) {}
 
   list(query: ProductListQuery): ProductListResponse {
     const conditions: SQL[] = [];
@@ -80,5 +96,62 @@ export class ProductService {
         totalPages,
       },
     };
+  }
+
+  get(id: string): ProductDetail | undefined {
+    const product = this.database
+      .select()
+      .from(products)
+      .where(eq(products.id, id))
+      .get();
+    return product === undefined ? undefined : toProductDetail(product);
+  }
+
+  create(input: ProductInput): ProductDetail | undefined {
+    if (this.hasSku(input.sku)) return undefined;
+    const timestamp = this.now();
+    const product = {
+      id: this.createId(),
+      ...input,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    this.database.insert(products).values(product).run();
+    return toProductDetail(product);
+  }
+
+  update(
+    id: string,
+    input: ProductInput,
+  ): ProductDetail | 'sku-conflict' | undefined {
+    if (this.get(id) === undefined) return undefined;
+    if (this.hasSku(input.sku, id)) return 'sku-conflict';
+    this.database
+      .update(products)
+      .set({ ...input, updatedAt: this.now() })
+      .where(eq(products.id, id))
+      .run();
+    return this.get(id);
+  }
+
+  delete(id: string): boolean {
+    return (
+      this.database.delete(products).where(eq(products.id, id)).run().changes >
+      0
+    );
+  }
+
+  private hasSku(sku: string, excludedId?: string): boolean {
+    const condition =
+      excludedId === undefined
+        ? eq(products.sku, sku)
+        : and(eq(products.sku, sku), ne(products.id, excludedId));
+    return (
+      this.database
+        .select({ id: products.id })
+        .from(products)
+        .where(condition)
+        .get() !== undefined
+    );
   }
 }

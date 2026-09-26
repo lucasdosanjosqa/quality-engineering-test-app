@@ -34,7 +34,9 @@ The login endpoint verifies a scrypt password hash and returns an opaque session
 
 ## Product query flow
 
-The authenticated catalog sends search, category, status, sorting, and pagination parameters to `GET /api/products`. The API validates them with the shared public contract and performs filtering, ordering, counting, and pagination in SQLite. Responses contain product summaries and explicit pagination metadata. The initial catalog is read-only; product mutations remain outside this milestone.
+The authenticated catalog sends search, category, status, sorting, and pagination parameters to `GET /api/products`. The API validates them with the shared public contract and performs filtering, ordering, counting, and pagination in SQLite. Responses contain product summaries and explicit pagination metadata.
+
+Authenticated users can read product details. Creation, replacement, and deletion require the Admin role at the API boundary. The API generates product IDs and timestamps, rejects duplicate SKUs with `409 Conflict`, and validates the shared product input before persistence. The frontend mirrors permissions for navigation and feedback but does not act as the authorization boundary.
 
 ## Test data boundary
 

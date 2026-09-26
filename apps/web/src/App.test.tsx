@@ -39,6 +39,12 @@ const microphone = {
   updatedAt: '2026-01-15T12:00:00.000Z',
 } as const;
 
+const monitorDetail = {
+  ...monitor,
+  description: 'IPS display with USB-C power delivery and adjustable stand.',
+  createdAt: '2026-01-15T12:00:00.000Z',
+};
+
 function productPage(
   items: unknown[],
   pagination = {
@@ -329,6 +335,107 @@ describe('authentication UI', () => {
     render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Products could not be loaded.',
+    );
+  });
+
+  it('shows product details without mutation controls to a Viewer', async () => {
+    openAt(`/products/${monitor.id}`);
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({ user: viewerUser }))
+      .mockResolvedValueOnce(jsonResponse({ product: monitorDetail }));
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: monitor.name }),
+    ).toBeVisible();
+    expect(screen.getByText(monitorDetail.description)).toBeVisible();
+    expect(
+      screen.queryByRole('link', { name: 'Edit' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Delete' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('blocks a Viewer from the product creation route', async () => {
+    openAt('/products/new');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      jsonResponse({ user: viewerUser }),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Access denied' }),
+    ).toBeVisible();
+  });
+
+  it('allows an Admin to create a product with the validated form', async () => {
+    openAt('/products/new');
+    const createdProduct = {
+      ...microphone,
+      description: 'Cardioid condenser microphone with desk stand.',
+      createdAt: '2026-06-01T12:00:00.000Z',
+    };
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({ user: adminUser }))
+      .mockResolvedValueOnce(jsonResponse({ product: createdProduct }, 201))
+      .mockResolvedValueOnce(jsonResponse({ product: createdProduct }));
+
+    render(<App />);
+    fireEvent.change(await screen.findByLabelText('SKU'), {
+      target: { value: createdProduct.sku },
+    });
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: createdProduct.name },
+    });
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: createdProduct.description },
+    });
+    fireEvent.change(screen.getByLabelText('Category'), {
+      target: { value: createdProduct.category },
+    });
+    fireEvent.change(screen.getByLabelText('Price (USD)'), {
+      target: { value: '109.90' },
+    });
+    fireEvent.change(screen.getByLabelText('Stock quantity'), {
+      target: { value: '9' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
+
+    expect(await screen.findByText('Product created.')).toBeVisible();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/products',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('requires confirmation before an Admin deletes a product', async () => {
+    openAt(`/products/${monitor.id}`);
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(jsonResponse({ user: adminUser }))
+      .mockResolvedValueOnce(jsonResponse({ product: monitorDetail }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(productPage([]));
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
+
+    expect(
+      screen.getByRole('dialog', { name: 'Delete product?' }),
+    ).toBeVisible();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+
+    expect(await screen.findByText('Product deleted.')).toBeVisible();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      `/api/products/${monitor.id}`,
+      expect.objectContaining({ method: 'DELETE' }),
     );
   });
 });

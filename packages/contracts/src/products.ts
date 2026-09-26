@@ -39,6 +39,29 @@ export const productSummarySchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
+export const productDetailSchema = productSummarySchema.extend({
+  description: z.string().min(1),
+  createdAt: z.string().datetime(),
+});
+
+export const productInputSchema = z.object({
+  sku: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(3)
+    .max(40)
+    .regex(/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/),
+  name: z.string().trim().min(2).max(100),
+  description: z.string().trim().min(10).max(500),
+  category: productCategorySchema,
+  priceCents: z.number().int().min(0).max(10_000_000),
+  stockQuantity: z.number().int().min(0).max(100_000),
+  status: productStatusSchema,
+});
+
+export const productResponseSchema = z.object({ product: productDetailSchema });
+
 export const productListResponseSchema = z.object({
   items: z.array(productSummarySchema),
   pagination: z.object({
@@ -54,4 +77,7 @@ export type ProductStatus = z.infer<typeof productStatusSchema>;
 export type ProductSortField = z.infer<typeof productSortFieldSchema>;
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
 export type ProductSummary = z.infer<typeof productSummarySchema>;
+export type ProductDetail = z.infer<typeof productDetailSchema>;
+export type ProductInput = z.infer<typeof productInputSchema>;
+export type ProductResponse = z.infer<typeof productResponseSchema>;
 export type ProductListResponse = z.infer<typeof productListResponseSchema>;
