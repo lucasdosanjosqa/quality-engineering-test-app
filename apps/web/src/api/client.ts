@@ -2,9 +2,12 @@ import {
   adminSummaryResponseSchema,
   authResponseSchema,
   errorResponseSchema,
+  productListResponseSchema,
   type AdminSummaryResponse,
   type AuthenticatedUser,
   type LoginRequest,
+  type ProductListQuery,
+  type ProductListResponse,
 } from '@commerceops/contracts';
 
 export class ApiError extends Error {
@@ -68,4 +71,30 @@ export async function getAdminSummary(
 ): Promise<AdminSummaryResponse> {
   const response = await request('/api/admin/summary', { signal });
   return adminSummaryResponseSchema.parse(await response.json());
+}
+
+export async function getProducts(
+  query: ProductListQuery,
+  signal?: AbortSignal,
+): Promise<ProductListResponse> {
+  const parameters = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+    sortBy: query.sortBy,
+    sortOrder: query.sortOrder,
+  });
+  if (query.search !== undefined && query.search !== '') {
+    parameters.set('search', query.search);
+  }
+  if (query.category !== undefined) {
+    parameters.set('category', query.category);
+  }
+  if (query.status !== undefined) {
+    parameters.set('status', query.status);
+  }
+
+  const response = await request(`/api/products?${parameters.toString()}`, {
+    signal,
+  });
+  return productListResponseSchema.parse(await response.json());
 }

@@ -33,6 +33,7 @@ export function DashboardPage() {
         <p>
           Signed in as <strong>{state.user.role}</strong>.
         </p>
+        <Link to="/products">Browse products</Link>
         {state.user.role === 'admin' && (
           <Link to="/admin">Open admin summary</Link>
         )}

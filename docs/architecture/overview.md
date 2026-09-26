@@ -32,6 +32,10 @@ The schema defines users, sessions, and products with foreign keys, uniqueness c
 
 The login endpoint verifies a scrypt password hash and returns an opaque session token only through an HttpOnly cookie. SQLite stores the token's SHA-256 digest, not the token itself. Authenticated requests resolve the session and user server-side, enforce absolute expiration, and apply role checks at the API boundary. The web application restores the current user through `/api/auth/me` and uses protected routes for user experience, while the API remains the authorization authority.
 
+## Product query flow
+
+The authenticated catalog sends search, category, status, sorting, and pagination parameters to `GET /api/products`. The API validates them with the shared public contract and performs filtering, ordering, counting, and pagination in SQLite. Responses contain product summaries and explicit pagination metadata. The initial catalog is read-only; product mutations remain outside this milestone.
+
 ## Test data boundary
 
 The same transactional reset service powers the local CLI and the optional HTTP endpoint. Test support is disabled by default. When enabled, startup requires a token of at least 16 characters and the endpoint compares its digest in constant time.
