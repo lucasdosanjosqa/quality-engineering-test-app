@@ -41,3 +41,5 @@ Authenticated users can read product details. Creation, replacement, and deletio
 ## Test data boundary
 
 The same transactional reset service powers the local CLI and the optional HTTP endpoint. Test support is disabled by default. When enabled, startup requires a token of at least 16 characters and the endpoint compares its digest in constant time.
+
+The same opt-in boundary exposes in-memory fault controls for product list, detail, and write operations. Active faults make normal product routes return a deterministic 503 response. They introduce no delay or randomness, are never persisted, and are cleared by the database reset endpoint. Network-level mocking remains outside the SUT.

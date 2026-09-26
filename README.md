@@ -19,9 +19,10 @@ The application foundation currently provides:
 - a migrated SQLite database with users, sessions, and products;
 - deterministic seed and reset operations;
 - an opt-in, token-protected `POST /api/test/reset` endpoint;
+- opt-in deterministic fault controls for product list, detail, and write operations;
 - a consistent public API error contract.
 
-File upload, password recovery, artificial failure controls, and Playwright tests are not implemented yet.
+File upload, password recovery, and Playwright tests are not implemented yet.
 
 ## Requirements
 
@@ -80,6 +81,21 @@ curl -X POST http://127.0.0.1:3000/api/test/reset \
 ```
 
 The route does not exist while test support is disabled. Never enable it in a publicly reachable environment.
+
+### Deterministic faults
+
+When test support is enabled, a protected control can make normal product routes return `503 TEST_FAULT_ACTIVE` without adding delays or randomness:
+
+```bash
+curl -X PUT http://127.0.0.1:3000/api/test/faults \
+  -H "content-type: application/json" \
+  -H "x-test-support-token: local-test-support-token" \
+  -d '{"target":"products.list","enabled":true}'
+```
+
+Valid targets are `products.list`, `products.detail`, and `products.write`. Inspect the current state with `GET /api/test/faults`, disable a target with the same `PUT` payload and `enabled: false`, or clear every fault with `POST /api/test/reset`. Fault state is process-local and is not persisted.
+
+These controls support deterministic product-state testing. External network interception remains the responsibility of the external automation framework.
 
 ## Authentication endpoints
 

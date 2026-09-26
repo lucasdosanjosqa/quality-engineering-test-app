@@ -12,6 +12,7 @@ import type { SessionService } from '../auth/session-service.js';
 import type { AppDatabase } from '../db/client.js';
 import { AppError } from '../errors/app-error.js';
 import { ProductService } from './product-service.js';
+import type { FaultController } from '../test-support/fault-controller.js';
 
 export function registerProductRoutes(
   app: FastifyInstance,
@@ -20,6 +21,7 @@ export function registerProductRoutes(
     sessionService: SessionService;
     now?: () => Date;
     createId?: () => string;
+    faults: FaultController;
   },
 ): void {
   const productService = new ProductService(
@@ -58,6 +60,7 @@ export function registerProductRoutes(
 
   app.get('/api/products', async (request, reply) => {
     requireUser(request, options.sessionService);
+    options.faults.throwIfActive('products.list');
     const query = productListQuerySchema.safeParse(request.query);
     if (!query.success) {
       throw new AppError(
@@ -75,6 +78,7 @@ export function registerProductRoutes(
 
   app.get('/api/products/:id', async (request, reply) => {
     requireUser(request, options.sessionService);
+    options.faults.throwIfActive('products.detail');
     const product = productService.get(productId(request.params));
     if (product === undefined) notFound();
     return reply.code(200).send(productResponseSchema.parse({ product }));
@@ -82,6 +86,7 @@ export function registerProductRoutes(
 
   app.post('/api/products', async (request, reply) => {
     requireUser(request, options.sessionService, ['admin']);
+    options.faults.throwIfActive('products.write');
     const product = productService.create(productInput(request.body));
     if (product === undefined)
       throw new AppError(
@@ -97,6 +102,7 @@ export function registerProductRoutes(
 
   app.put('/api/products/:id', async (request, reply) => {
     requireUser(request, options.sessionService, ['admin']);
+    options.faults.throwIfActive('products.write');
     const product = productService.update(
       productId(request.params),
       productInput(request.body),
@@ -113,6 +119,7 @@ export function registerProductRoutes(
 
   app.delete('/api/products/:id', async (request, reply) => {
     requireUser(request, options.sessionService, ['admin']);
+    options.faults.throwIfActive('products.write');
     if (!productService.delete(productId(request.params))) notFound();
     return reply.code(204).send();
   });
