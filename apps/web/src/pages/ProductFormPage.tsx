@@ -89,7 +89,7 @@ export function ProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const product = loadState.product;
 
   return (
-    <main className={styles.pageLayout}>
+    <main id="main-content" className={styles.pageLayout}>
       <nav aria-label="Breadcrumb">
         <Link to="/products">Products</Link> /{' '}
         <span>{mode === 'create' ? 'Create' : 'Edit'}</span>

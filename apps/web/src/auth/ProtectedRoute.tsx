@@ -8,16 +8,20 @@ export function ProtectedRoute({ roles }: { roles?: UserRole[] }) {
   const location = useLocation();
 
   if (state.status === 'loading') {
-    return <p role="status">Restoring your session…</p>;
+    return (
+      <main id="main-content">
+        <p role="status">Restoring your session…</p>
+      </main>
+    );
   }
   if (state.status === 'error') {
     return (
-      <div role="alert">
+      <main id="main-content" role="alert">
         <p>We could not verify your session.</p>
         <button type="button" onClick={refresh}>
           Try again
         </button>
-      </div>
+      </main>
     );
   }
   if (state.status === 'guest') {
@@ -25,10 +29,10 @@ export function ProtectedRoute({ roles }: { roles?: UserRole[] }) {
   }
   if (roles !== undefined && !roles.includes(state.user.role)) {
     return (
-      <section aria-labelledby="forbidden-heading">
+      <main id="main-content" aria-labelledby="forbidden-heading">
         <h1 id="forbidden-heading">Access denied</h1>
         <p>You do not have permission to view this page.</p>
-      </section>
+      </main>
     );
   }
 

@@ -86,7 +86,7 @@ export function ProductsPage() {
   }
 
   return (
-    <main className={styles.pageLayout}>
+    <main id="main-content" className={styles.pageLayout}>
       <nav aria-label="Breadcrumb">
         <Link to="/dashboard">Dashboard</Link> / <span>Products</span>
       </nav>

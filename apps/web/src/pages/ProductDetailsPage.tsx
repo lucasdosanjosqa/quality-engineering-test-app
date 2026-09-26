@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import styles from '../App.module.css';
 import { deleteProduct, getProduct } from '../api/client';
 import { useAuth } from '../auth/useAuth';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 type DetailState =
   | { status: 'loading' }
@@ -61,7 +62,7 @@ export function ProductDetailsPage() {
   const notice = (location.state as { notice?: string } | null)?.notice;
 
   return (
-    <main className={styles.pageLayout}>
+    <main id="main-content" className={styles.pageLayout}>
       <nav aria-label="Breadcrumb">
         <Link to="/products">Products</Link> / <span>{product.name}</span>
       </nav>
@@ -117,29 +118,14 @@ export function ProductDetailsPage() {
         </div>
       </dl>
       {confirmingDelete && (
-        <div className={styles.modalBackdrop}>
-          <section
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-title"
-          >
-            <h2 id="delete-title">Delete product?</h2>
-            <p>This permanently deletes {product.name}.</p>
-            <div className={styles.actions}>
-              <button type="button" onClick={() => setConfirmingDelete(false)}>
-                Cancel
-              </button>
-              <button
-                className={styles.dangerButton}
-                type="button"
-                onClick={() => void handleDelete()}
-              >
-                Confirm delete
-              </button>
-            </div>
-          </section>
-        </div>
+        <ConfirmDialog
+          title="Delete product?"
+          confirmLabel="Confirm delete"
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={() => void handleDelete()}
+        >
+          <p>This permanently deletes {product.name}.</p>
+        </ConfirmDialog>
       )}
     </main>
   );
